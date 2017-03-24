@@ -24,12 +24,20 @@ with open('batting2016.csv', 'rb') as battingFile:
             key = key.split('*')[0]
         if key.find('#') > -1:
             key = key.split('#')[0]
+
+        # if we have a row for the player already, check if the existing one is TOT and replace if it isn't
+        # NOTE: from looking at the data, TOT should be the first row for a player if player has multiple entries
+        if key in battingStatsDict:
+            if battingStatsDict[key][3] == 'TOT':
+                continue
+
         battingStatsDict[key] = row
     battingFile.closed
 
 # ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'G', 'PA', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'CS', 'BB', 'SO', 'BA', 'OBP', 'SLG', 'OPS', 'OPS+', 'TB', 'GDP', 'HBP', 'SH', 'SF', 'IBB', 'Pos Summary']
 # indices in battingStatsDict[x]:
-# G = 5
+# Tm = 3                    Used to figure out if row is Total stat values for season
+# G = 5                     Used for avg value per game
 # R = 8                     [2]
 # 1B = 9 - (10 + 11 + 12)   [1]
 # 2B = 10                   [2]
@@ -74,8 +82,6 @@ for key1 in battingStatsDict.iteritems():
             battingValuesDict[playerName] += value1B
             continue
         battingValuesDict[playerName] += float(statRow[index]) * modifier
-
-    # print battingValuesDict[playerName]
 
 # dictionary of player stats
 # key = player name
@@ -133,6 +139,7 @@ for row in battingValuesDict.iteritems():
     value = row[1]
     # drop anyone below 100 in batting data
     if value > 100:
+        # calculate each player's value per game and add as the third value
         averageValuePerGame = (value/float(battingStatsDict[playerName][5]))
         playerTuple = (playerName, value, averageValuePerGame)
         battingOutputList.append(playerTuple)
