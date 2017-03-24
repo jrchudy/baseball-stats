@@ -137,16 +137,40 @@ battingOutputList = []
 for row in battingValuesDict.iteritems():
     playerName = row[0]
     value = row[1]
-    # drop anyone below 100 in batting data
-    if value > 100:
+    # drop anyone below 50 in batting data
+    # using 100 leaves out too many prospects
+    if value > 50:
         # calculate each player's value per game and add as the third value
         averageValuePerGame = (value/float(battingStatsDict[playerName][5]))
         playerTuple = (playerName, value, averageValuePerGame)
         battingOutputList.append(playerTuple)
 
-sortedBattingOutputList = sorted(battingOutputList, key=itemgetter(1), reverse=True)
+with open('battingValues2016sortOverall.txt', 'wb') as battingOutput:
+    # sort the list by season value
+    sortedBattingOutputList = sorted(battingOutputList, key=itemgetter(1), reverse=True)
+    for row in sortedBattingOutputList:
+        playerName = row[0]
+        value = row[1]
+        avgValue = row[2]
 
-with open('battingValues2016.txt', 'wb') as battingOutput:
+        tabString = "\t"
+        if len(playerName) < 8:
+            tabString = "\t\t\t\t\t"
+        elif len(playerName) < 12:
+            tabString = "\t\t\t\t"
+        elif len(playerName) < 16:
+            tabString = "\t\t\t"
+        elif len(playerName) < 20:
+            tabString = "\t\t"
+
+        outputRow = playerName + tabString + str(value) + "\t\t" + str(avgValue) + "\n"
+        battingOutput.write( outputRow )
+
+    battingOutput.closed
+
+with open('battingValues2016sortAvg.txt', 'wb') as battingOutput:
+    # sort the list by avg value per game, highest to lowest
+    sortedBattingOutputList = sorted(battingOutputList, key=itemgetter(2), reverse=True)
     for row in sortedBattingOutputList:
         playerName = row[0]
         value = row[1]
