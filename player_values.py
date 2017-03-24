@@ -1,4 +1,5 @@
 import csv
+from operator import itemgetter
 
 # dictionary of player stats
 # key = playeer name
@@ -21,11 +22,14 @@ with open('batting2016.csv', 'rb') as battingFile:
         key = row[1].split('\\')[0]
         if key.find('*') > -1:
             key = key.split('*')[0]
+        if key.find('#') > -1:
+            key = key.split('#')[0]
         battingStatsDict[key] = row
     battingFile.closed
 
 # ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'G', 'PA', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'CS', 'BB', 'SO', 'BA', 'OBP', 'SLG', 'OPS', 'OPS+', 'TB', 'GDP', 'HBP', 'SH', 'SF', 'IBB', 'Pos Summary']
 # indices in battingStatsDict[x]:
+# G = 5
 # R = 8                     [2]
 # 1B = 9 - (10 + 11 + 12)   [1]
 # 2B = 10                   [2]
@@ -87,6 +91,10 @@ with open('fielding2016.csv', 'rb') as fieldingFile:
             continue
 
         key = row[1].split('\\')[0]
+        if key.find('*') > -1:
+            key = key.split('*')[0]
+        if key.find('#') > -1:
+            key = key.split('#')[0]
         fieldingStatsDict[key] = row
     fieldingFile.closed
 
@@ -102,9 +110,11 @@ for key1 in fieldingStatsDict.iteritems():
      # calculate errors value
     fieldingValue = (float(statRow[12]) * -1)
 
-    #add OFA assists if OF in position summary
-    if statRow[21].find('OF'):
-        fieldingValue += float(statRow[11])
+    # add OFA assists if OF in position summary
+    # if statRow[21].find('OF') > -1:
+    #     fieldingValue += float(statRow[11])
+    #     if (fieldingValue > 20):
+    #         print (playerName, fieldingValue)
 
 
     if not playerName in battingValuesDict:
@@ -112,5 +122,40 @@ for key1 in fieldingStatsDict.iteritems():
 
     battingValuesDict[playerName] += fieldingValue
 
-    if battingValuesDict[playerName] > 700:
-        print (playerName, ": ", battingValuesDict[playerName])
+
+
+
+############ OUTPUT CODE ############
+battingOutputList = []
+# need to curate data
+for row in battingValuesDict.iteritems():
+    playerName = row[0]
+    value = row[1]
+    # drop anyone below 100 in batting data
+    if value > 100:
+        averageValuePerGame = (value/float(battingStatsDict[playerName][5]))
+        playerTuple = (playerName, value, averageValuePerGame)
+        battingOutputList.append(playerTuple)
+
+sortedBattingOutputList = sorted(battingOutputList, key=itemgetter(1), reverse=True)
+
+with open('battingValues2016.txt', 'wb') as battingOutput:
+    for row in sortedBattingOutputList:
+        playerName = row[0]
+        value = row[1]
+        avgValue = row[2]
+
+        tabString = "\t"
+        if len(playerName) < 8:
+            tabString = "\t\t\t\t\t"
+        elif len(playerName) < 12:
+            tabString = "\t\t\t\t"
+        elif len(playerName) < 16:
+            tabString = "\t\t\t"
+        elif len(playerName) < 20:
+            tabString = "\t\t"
+
+        outputRow = playerName + tabString + str(value) + "\t\t" + str(avgValue) + "\n"
+        battingOutput.write( outputRow )
+
+    battingOutput.closed
