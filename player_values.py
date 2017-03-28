@@ -1,7 +1,27 @@
 import csv
 from operator import itemgetter
 
-# dictionary of player stats
+def stripSpecialChars(nameStr):
+    name = nameStr.split('\\')[0]
+    if name.find('*') > -1:
+        name = name.split('*')[0]
+    if name.find('#') > -1:
+        name = name.split('#')[0]
+    return name
+
+def tabString(playerName):
+    tab = "\t"
+    if len(playerName) < 8:
+        tab = "\t\t\t\t\t"
+    elif len(playerName) < 12:
+        tab = "\t\t\t\t"
+    elif len(playerName) < 16:
+        tab = "\t\t\t"
+    elif len(playerName) < 20:
+        tab = "\t\t"
+    return tab
+
+# dictionary of player batting stats
 # key = playeer name
 # value = player's stat row[]
 battingStatsDict = {}
@@ -19,11 +39,7 @@ with open('batting2016.csv', 'rb') as battingFile:
             i += 1
             continue
 
-        key = row[1].split('\\')[0]
-        if key.find('*') > -1:
-            key = key.split('*')[0]
-        if key.find('#') > -1:
-            key = key.split('#')[0]
+        key = stripSpecialChars(row[1])
 
         # if we have a row for the player already, check if the existing one is TOT and replace if it isn't
         # NOTE: from looking at the data, TOT should be the first row for a player if player has multiple entries
@@ -83,7 +99,7 @@ for key1 in battingStatsDict.iteritems():
             continue
         battingValuesDict[playerName] += float(statRow[index]) * modifier
 
-# dictionary of player stats
+# dictionary of player fielding stats
 # key = player name
 # value = player's stat row
 fieldingStatsDict = {}
@@ -96,11 +112,8 @@ with open('fielding2016.csv', 'rb') as fieldingFile:
             i += 1
             continue
 
-        key = row[1].split('\\')[0]
-        if key.find('*') > -1:
-            key = key.split('*')[0]
-        if key.find('#') > -1:
-            key = key.split('#')[0]
+        key = stripSpecialChars(row[1])
+
         fieldingStatsDict[key] = row
     fieldingFile.closed
 
@@ -109,10 +122,10 @@ with open('fielding2016.csv', 'rb') as fieldingFile:
 # E = 12                               [-1]
 # OFA = if indexOf('OF') in 21 { 11 }  [1]
 
-for key1 in fieldingStatsDict.iteritems():
-    playerName = key1[0]
+for key in fieldingStatsDict.iteritems():
+    playerName = key[0]
     # array of stat values
-    statRow = key1[1]
+    statRow = key[1]
      # calculate errors value
     fieldingValue = (float(statRow[12]) * -1)
 
@@ -128,15 +141,78 @@ for key1 in fieldingStatsDict.iteritems():
 
     battingValuesDict[playerName] += fieldingValue
 
+############ Pitching Stats ################
+
+# dictionary of player pitching stats
+# key = player name
+# value = player's stat row
+pitchingStatsDict = {}
+
+# dictionary of player values
+# key = player name
+# value = adjusted value
+pitchingValuesDict = {}
+
+with open('pitching2016.csv', 'rb') as pitchingFile:
+    pitchingReader = csv.reader(pitchingFile)
+    i = 0
+    for row in pitchingReader:
+        if i == 0:
+            i += 1
+            continue
+
+        key = stripSpecialChars(row[1])
+
+        # if we have a row for the player already, check if the existing one is TOT and replace if it isn't
+        # NOTE: from looking at the data, TOT should be the first row for a player if player has multiple entries
+        if key in pitchingStatsDict:
+            if pitchingStatsDict[key][3] == 'TOT':
+                continue
+
+        pitchingStatsDict[key] = row
+    pitchingFile.closed
+
+# ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'W', 'L', 'W-L%', 'ERA', 'G', 'GS', 'GF', 'CG', 'SHO', 'SV', 'IP', 'H', 'R', 'ER', 'HR', 'BB', 'IBB', 'SO', 'HBP', 'BK', 'WP', 'BF', 'ERA+', 'FIP', 'WHIP', 'H9', 'HR9', 'BB9', 'SO9', 'SO/W']
+# indices in pitchingStatsDict[x]:
+
+# {
+#   stat: [index, modifier]
+# }
+pitchingTransform = {
+    'IP': [15, 1],
+    'W': [5, 3],
+    'L': [6, -2],
+    'CG': [12, 3],
+    'SHO': [13, 5],
+    'SV': [14, 5],
+    'ER': [18, -1],
+    'HR': [19, -1],
+    'BB': [20, -0.5],
+    'SO': [22, 2],
+    'WP': [25, -1]
+}
+
+for key1 in pitchingStatsDict.iteritems():
+    playerName = key1[0]
+    # array of stat values
+    statRow = key1[1]
+    pitchingValuesDict[playerName] = 0
+
+    for key2 in pitchingTransform.iteritems():
+        stat = key2[0]
+        index = key2[1][0]
+        modifier = key2[1][1]
+
+        pitchingValuesDict[playerName] += float(statRow[index]) * modifier
 
 
-
-############ OUTPUT CODE ############
+############## OUTPUT ##############
+############# BATTING ##############
 battingOutputList = []
 # need to curate data
-for row in battingValuesDict.iteritems():
-    playerName = row[0]
-    value = row[1]
+for valueRow in battingValuesDict.iteritems():
+    playerName = valueRow[0]
+    value = valueRow[1]
     # drop anyone below 50 in batting data
     # using 100 leaves out too many prospects
     if value > 50:
@@ -153,17 +229,7 @@ with open('battingValues2016sortOverall.txt', 'wb') as battingOutput:
         value = row[1]
         avgValue = row[2]
 
-        tabString = "\t"
-        if len(playerName) < 8:
-            tabString = "\t\t\t\t\t"
-        elif len(playerName) < 12:
-            tabString = "\t\t\t\t"
-        elif len(playerName) < 16:
-            tabString = "\t\t\t"
-        elif len(playerName) < 20:
-            tabString = "\t\t"
-
-        outputRow = playerName + tabString + str(value) + "\t\t" + str(avgValue) + "\n"
+        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
         battingOutput.write( outputRow )
 
     battingOutput.closed
@@ -176,17 +242,45 @@ with open('battingValues2016sortAvg.txt', 'wb') as battingOutput:
         value = row[1]
         avgValue = row[2]
 
-        tabString = "\t"
-        if len(playerName) < 8:
-            tabString = "\t\t\t\t\t"
-        elif len(playerName) < 12:
-            tabString = "\t\t\t\t"
-        elif len(playerName) < 16:
-            tabString = "\t\t\t"
-        elif len(playerName) < 20:
-            tabString = "\t\t"
-
-        outputRow = playerName + tabString + str(value) + "\t\t" + str(avgValue) + "\n"
+        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
         battingOutput.write( outputRow )
 
     battingOutput.closed
+
+########## PITCHING ############
+pitchingOutputList = []
+
+for valueRow in pitchingValuesDict.iteritems():
+    playerName = valueRow[0]
+    value = valueRow[1]
+
+    if value > 50:
+        averageValuePerGame = (value/float(pitchingStatsDict[playerName][9]))
+        playerTuple = (playerName, value, averageValuePerGame)
+        pitchingOutputList.append(playerTuple)
+
+with open('pitchingValues2016sortOverall.txt', 'wb') as pitchingOutput:
+    # sort the list by season value
+    sortedPitchingOutputList = sorted(pitchingOutputList, key=itemgetter(1), reverse=True)
+    for row in sortedPitchingOutputList:
+        playerName = row[0]
+        value = row[1]
+        avgValue = row[2]
+
+        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
+        pitchingOutput.write( outputRow )
+
+    pitchingOutput.closed
+
+with open('pitchingValues2016sortAvg.txt', 'wb') as pitchingOutput:
+    # sort the list by avg value per game, highest to lowest
+    sortedPitchingOutputList = sorted(pitchingOutputList, key=itemgetter(2), reverse=True)
+    for row in sortedPitchingOutputList:
+        playerName = row[0]
+        value = row[1]
+        avgValue = row[2]
+
+        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
+        pitchingOutput.write( outputRow )
+
+    pitchingOutput.closed
