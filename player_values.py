@@ -74,7 +74,7 @@ def writeDataToFile(fileName, data, sortIndex):
 # dictionary of player batting stats
 # key = playeer name
 # value = player's stat row[]
-battingStatsDict = readDataFromFile('batting2016.csv')
+battingStatsDict = readDataFromFile('stat_csv_files/batting2016.csv')
 
 # dictionary of player values
 # key = player name
@@ -133,7 +133,7 @@ for key1 in battingStatsDict.iteritems():
 # dictionary of player fielding stats
 # key = player name
 # value = player's stat row
-fieldingStatsDict = readDataFromFile('fielding2016.csv')
+fieldingStatsDict = readDataFromFile('stat_csv_files/fielding2016.csv')
 
 # ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'G', 'GS', 'CG', 'Inn', 'Ch', 'PO', 'A', 'E', 'DP', 'Fld%', 'Rtot', 'Rtot/yr', 'Rdrs', 'Rdrs/yr', 'RF/9', 'RF/G', 'Pos Summary']
 # indices in fieldingStatsDict[x]:
@@ -165,7 +165,7 @@ for key in fieldingStatsDict.iteritems():
 # dictionary of player pitching stats
 # key = player name
 # value = player's stat row
-pitchingStatsDict = readDataFromFile('pitching2016.csv')
+pitchingStatsDict = readDataFromFile('stat_csv_files/pitching2016.csv')
 
 # dictionary of player values
 # key = player name
@@ -255,26 +255,26 @@ for valueRow in battingValuesDict.iteritems():
 
         addToPositionList(playerTuple)
 
-writeDataToFile('battingValues2016sortOverall.txt', battingOutputList, 1)
-writeDataToFile('battingValues2016sortAvg.txt', battingOutputList, 2)
+writeDataToFile('value_text_files/battingValues2016sortOverall.txt', battingOutputList, 1)
+writeDataToFile('value_text_files/battingValues2016sortAvg.txt', battingOutputList, 2)
 
-writeDataToFile('1Bvalues2016sortOverall.txt', position1B, 1)
-writeDataToFile('1Bvalues2016sortAvg.txt', position1B, 2)
+writeDataToFile('value_text_files/1Bvalues2016sortOverall.txt', position1B, 1)
+writeDataToFile('value_text_files/1Bvalues2016sortAvg.txt', position1B, 2)
 
-writeDataToFile('2Bvalues2016sortOverall.txt', position2B, 1)
-writeDataToFile('2Bvalues2016sortAvg.txt', position2B, 2)
+writeDataToFile('value_text_files/2Bvalues2016sortOverall.txt', position2B, 1)
+writeDataToFile('value_text_files/2Bvalues2016sortAvg.txt', position2B, 2)
 
-writeDataToFile('3Bvalues2016sortOverall.txt', position3B, 1)
-writeDataToFile('3Bvalues2016sortAvg.txt', position3B, 2)
+writeDataToFile('value_text_files/3Bvalues2016sortOverall.txt', position3B, 1)
+writeDataToFile('value_text_files/3Bvalues2016sortAvg.txt', position3B, 2)
 
-writeDataToFile('SSvalues2016sortOverall.txt', positionSS, 1)
-writeDataToFile('SSvalues2016sortAvg.txt', positionSS, 2)
+writeDataToFile('value_text_files/SSvalues2016sortOverall.txt', positionSS, 1)
+writeDataToFile('value_text_files/SSvalues2016sortAvg.txt', positionSS, 2)
 
-writeDataToFile('Cvalues2016sortOverall.txt', positionC, 1)
-writeDataToFile('Cvalues2016sortAvg.txt', positionC, 2)
+writeDataToFile('value_text_files/Cvalues2016sortOverall.txt', positionC, 1)
+writeDataToFile('value_text_files/Cvalues2016sortAvg.txt', positionC, 2)
 
-writeDataToFile('OFvalues2016sortOverall.txt', positionOF, 1)
-writeDataToFile('OFvalues2016sortAvg.txt', positionOF, 2)
+writeDataToFile('value_text_files/OFvalues2016sortOverall.txt', positionOF, 1)
+writeDataToFile('value_text_files/OFvalues2016sortAvg.txt', positionOF, 2)
 
 ########## PITCHING ############
 pitchingOutputList = []
@@ -288,5 +288,5 @@ for valueRow in pitchingValuesDict.iteritems():
         playerTuple = (playerName, value, averageValuePerGame)
         pitchingOutputList.append(playerTuple)
 
-writeDataToFile('pitchingValues2016sortOverall.txt', pitchingOutputList, 1)
-writeDataToFile('pitchingValues2016sortAvg.txt', pitchingOutputList, 2)
+writeDataToFile('value_text_files/pitchingValues2016sortOverall.txt', pitchingOutputList, 1)
+writeDataToFile('value_text_files/pitchingValues2016sortAvg.txt', pitchingOutputList, 2)
