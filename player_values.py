@@ -1,6 +1,10 @@
 import csv
 from operator import itemgetter
 
+###### Function Definitions ######
+
+# removes everything after '\\' and then strips '*' and '#'
+# nameStr: name*#\\nameHash
 def stripSpecialChars(nameStr):
     name = nameStr.split('\\')[0]
     if name.find('*') > -1:
@@ -9,6 +13,7 @@ def stripSpecialChars(nameStr):
         name = name.split('#')[0]
     return name
 
+# uses playerName.length to determine how many tabs to return
 def tabString(playerName):
     tab = "\t"
     if len(playerName) < 8:
@@ -21,34 +26,60 @@ def tabString(playerName):
         tab = "\t\t"
     return tab
 
+# needs to be defined after stripSpecialChars
+# fileName: data file in .csv format
+def readDataFromFile(fileName):
+    dataDict = {}
+    with open(fileName, 'rb') as dataFile:
+        dataReader = csv.reader(dataFile)
+        i = 0
+        for row in dataReader:
+            if i == 0:
+                i += 1
+                continue
+
+            key = stripSpecialChars(row[1])
+
+            # if we have a row for the player already, check if the existing one is TOT and replace if it isn't
+            # NOTE: from looking at the data, TOT should be the first row for a player if player has multiple entries
+            if key in dataDict:
+                if dataDict[key][3] == 'TOT':
+                    continue
+
+            dataDict[key] = row
+        dataFile.closed
+
+    return dataDict
+
+# take data and sorts it by sortIndex and writes to fileName
+# fileName: output file in .txt
+# data[](): and arry of tuples
+# sortIndex: index in the tuple to sort by
+def writeDataToFile(fileName, data, sortIndex):
+    with open(fileName, 'wb') as battingOutput:
+        # sort the list by season value
+        sortedBattingOutputList = sorted(data, key=itemgetter(sortIndex), reverse=True)
+        for row in sortedBattingOutputList:
+            playerName = row[0]
+            value = row[1]
+            avgValue = row[2]
+
+            outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
+            battingOutput.write( outputRow )
+
+        battingOutput.closed
+
+########### Scripting ############
+
 # dictionary of player batting stats
 # key = playeer name
 # value = player's stat row[]
-battingStatsDict = {}
+battingStatsDict = readDataFromFile('batting2016.csv')
 
 # dictionary of player values
 # key = player name
 # value = adjusted value
 battingValuesDict = {}
-
-with open('batting2016.csv', 'rb') as battingFile:
-    battingReader = csv.reader(battingFile)
-    i = 0
-    for row in battingReader:
-        if i == 0:
-            i += 1
-            continue
-
-        key = stripSpecialChars(row[1])
-
-        # if we have a row for the player already, check if the existing one is TOT and replace if it isn't
-        # NOTE: from looking at the data, TOT should be the first row for a player if player has multiple entries
-        if key in battingStatsDict:
-            if battingStatsDict[key][3] == 'TOT':
-                continue
-
-        battingStatsDict[key] = row
-    battingFile.closed
 
 # ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'G', 'PA', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'CS', 'BB', 'SO', 'BA', 'OBP', 'SLG', 'OPS', 'OPS+', 'TB', 'GDP', 'HBP', 'SH', 'SF', 'IBB', 'Pos Summary']
 # indices in battingStatsDict[x]:
@@ -102,25 +133,13 @@ for key1 in battingStatsDict.iteritems():
 # dictionary of player fielding stats
 # key = player name
 # value = player's stat row
-fieldingStatsDict = {}
-
-with open('fielding2016.csv', 'rb') as fieldingFile:
-    fieldingReader = csv.reader(fieldingFile)
-    i = 0
-    for row in fieldingReader:
-        if i == 0:
-            i += 1
-            continue
-
-        key = stripSpecialChars(row[1])
-
-        fieldingStatsDict[key] = row
-    fieldingFile.closed
+fieldingStatsDict = readDataFromFile('fielding2016.csv')
 
 # ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'G', 'GS', 'CG', 'Inn', 'Ch', 'PO', 'A', 'E', 'DP', 'Fld%', 'Rtot', 'Rtot/yr', 'Rdrs', 'Rdrs/yr', 'RF/9', 'RF/G', 'Pos Summary']
 # indices in fieldingStatsDict[x]:
 # E = 12                               [-1]
 # OFA = if indexOf('OF') in 21 { 11 }  [1]
+# Pos Summary = 21
 
 for key in fieldingStatsDict.iteritems():
     playerName = key[0]
@@ -146,31 +165,12 @@ for key in fieldingStatsDict.iteritems():
 # dictionary of player pitching stats
 # key = player name
 # value = player's stat row
-pitchingStatsDict = {}
+pitchingStatsDict = readDataFromFile('pitching2016.csv')
 
 # dictionary of player values
 # key = player name
 # value = adjusted value
 pitchingValuesDict = {}
-
-with open('pitching2016.csv', 'rb') as pitchingFile:
-    pitchingReader = csv.reader(pitchingFile)
-    i = 0
-    for row in pitchingReader:
-        if i == 0:
-            i += 1
-            continue
-
-        key = stripSpecialChars(row[1])
-
-        # if we have a row for the player already, check if the existing one is TOT and replace if it isn't
-        # NOTE: from looking at the data, TOT should be the first row for a player if player has multiple entries
-        if key in pitchingStatsDict:
-            if pitchingStatsDict[key][3] == 'TOT':
-                continue
-
-        pitchingStatsDict[key] = row
-    pitchingFile.closed
 
 # ['Rk', 'Name', 'Age', 'Tm', 'Lg', 'W', 'L', 'W-L%', 'ERA', 'G', 'GS', 'GF', 'CG', 'SHO', 'SV', 'IP', 'H', 'R', 'ER', 'HR', 'BB', 'IBB', 'SO', 'HBP', 'BK', 'WP', 'BF', 'ERA+', 'FIP', 'WHIP', 'H9', 'HR9', 'BB9', 'SO9', 'SO/W']
 # indices in pitchingStatsDict[x]:
@@ -205,6 +205,38 @@ for key1 in pitchingStatsDict.iteritems():
 
         pitchingValuesDict[playerName] += float(statRow[index]) * modifier
 
+position1B = []
+position2B = []
+position3B = []
+positionSS = []
+positionC  = []
+positionOF = []
+
+# playerRow: (player name, overall value, average value)
+def addToPositionList(playerTuple):
+    playerName = playerTuple[0]
+    positionIndex = 21
+
+    if playerName in fieldingStatsDict:
+        # 1B data
+        if fieldingStatsDict[playerName][positionIndex].find('1B') > -1:
+            position1B.append(playerTuple)
+        # 2B data
+        if fieldingStatsDict[playerName][positionIndex].find('2B') > -1:
+            position2B.append(playerTuple)
+        # 3B data
+        if fieldingStatsDict[playerName][positionIndex].find('3B') > -1:
+            position3B.append(playerTuple)
+        # SS data
+        if fieldingStatsDict[playerName][positionIndex].find('SS') > -1:
+            positionSS.append(playerTuple)
+        # C data
+        if fieldingStatsDict[playerName][positionIndex].find('C') > -1:
+            positionC.append(playerTuple)
+        # OF data
+        if fieldingStatsDict[playerName][positionIndex].find('OF') > -1:
+            positionOF.append(playerTuple)
+
 
 ############## OUTPUT ##############
 ############# BATTING ##############
@@ -221,31 +253,28 @@ for valueRow in battingValuesDict.iteritems():
         playerTuple = (playerName, value, averageValuePerGame)
         battingOutputList.append(playerTuple)
 
-with open('battingValues2016sortOverall.txt', 'wb') as battingOutput:
-    # sort the list by season value
-    sortedBattingOutputList = sorted(battingOutputList, key=itemgetter(1), reverse=True)
-    for row in sortedBattingOutputList:
-        playerName = row[0]
-        value = row[1]
-        avgValue = row[2]
+        addToPositionList(playerTuple)
 
-        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
-        battingOutput.write( outputRow )
+writeDataToFile('battingValues2016sortOverall.txt', battingOutputList, 1)
+writeDataToFile('battingValues2016sortAvg.txt', battingOutputList, 2)
 
-    battingOutput.closed
+writeDataToFile('1Bvalues2016sortOverall.txt', position1B, 1)
+writeDataToFile('1Bvalues2016sortAvg.txt', position1B, 2)
 
-with open('battingValues2016sortAvg.txt', 'wb') as battingOutput:
-    # sort the list by avg value per game, highest to lowest
-    sortedBattingOutputList = sorted(battingOutputList, key=itemgetter(2), reverse=True)
-    for row in sortedBattingOutputList:
-        playerName = row[0]
-        value = row[1]
-        avgValue = row[2]
+writeDataToFile('2Bvalues2016sortOverall.txt', position2B, 1)
+writeDataToFile('2Bvalues2016sortAvg.txt', position2B, 2)
 
-        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
-        battingOutput.write( outputRow )
+writeDataToFile('3Bvalues2016sortOverall.txt', position3B, 1)
+writeDataToFile('3Bvalues2016sortAvg.txt', position3B, 2)
 
-    battingOutput.closed
+writeDataToFile('SSvalues2016sortOverall.txt', positionSS, 1)
+writeDataToFile('SSvalues2016sortAvg.txt', positionSS, 2)
+
+writeDataToFile('Cvalues2016sortOverall.txt', positionC, 1)
+writeDataToFile('Cvalues2016sortAvg.txt', positionC, 2)
+
+writeDataToFile('OFvalues2016sortOverall.txt', positionOF, 1)
+writeDataToFile('OFvalues2016sortAvg.txt', positionOF, 2)
 
 ########## PITCHING ############
 pitchingOutputList = []
@@ -259,28 +288,5 @@ for valueRow in pitchingValuesDict.iteritems():
         playerTuple = (playerName, value, averageValuePerGame)
         pitchingOutputList.append(playerTuple)
 
-with open('pitchingValues2016sortOverall.txt', 'wb') as pitchingOutput:
-    # sort the list by season value
-    sortedPitchingOutputList = sorted(pitchingOutputList, key=itemgetter(1), reverse=True)
-    for row in sortedPitchingOutputList:
-        playerName = row[0]
-        value = row[1]
-        avgValue = row[2]
-
-        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
-        pitchingOutput.write( outputRow )
-
-    pitchingOutput.closed
-
-with open('pitchingValues2016sortAvg.txt', 'wb') as pitchingOutput:
-    # sort the list by avg value per game, highest to lowest
-    sortedPitchingOutputList = sorted(pitchingOutputList, key=itemgetter(2), reverse=True)
-    for row in sortedPitchingOutputList:
-        playerName = row[0]
-        value = row[1]
-        avgValue = row[2]
-
-        outputRow = playerName + tabString(playerName) + str(value) + "\t\t" + str(avgValue) + "\n"
-        pitchingOutput.write( outputRow )
-
-    pitchingOutput.closed
+writeDataToFile('pitchingValues2016sortOverall.txt', pitchingOutputList, 1)
+writeDataToFile('pitchingValues2016sortAvg.txt', pitchingOutputList, 2)
